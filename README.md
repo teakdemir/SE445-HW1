@@ -130,3 +130,5 @@ Expected output example:
 - No authentication
 - No deployment setup
 - Minimal file structure for easy explanation in class
+
+- // there is an secret apı key that I cannot share in the files.
