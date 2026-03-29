@@ -4,7 +4,6 @@ import axios from "axios";
 import OpenAI from "openai";
 
 // Load values from .env file
-// Example: OPENAI_API_KEY=...
 dotenv.config();
 
 const app = express();
@@ -66,23 +65,32 @@ app.post("/process-message", async (req, res) => {
     };
 
     // Step 3: AI Completion (OpenAI summary)
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a professional assistant. Summarize the customer's message in one short professional sentence."
-        },
-        {
-          role: "user",
-          content: processedData.cleanMessage
-        }
-      ],
-      temperature: 0.2
-    });
+    let aiSummary = "";
 
-    const aiSummary = aiResponse.choices?.[0]?.message?.content?.trim() || "No summary generated.";
+    try {
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a professional assistant. Summarize the customer's message in one short professional sentence."
+          },
+          {
+            role: "user",
+            content: processedData.cleanMessage
+          }
+        ],
+        temperature: 0.2
+      });
+
+      aiSummary =
+        aiResponse.choices?.[0]?.message?.content?.trim() ||
+        "No summary generated.";
+    } catch (aiError) {
+      console.error("OpenAI error:", aiError.message);
+      aiSummary = "AI summary could not be generated because API quota is unavailable.";
+    }
 
     // Final response
     return res.json({
