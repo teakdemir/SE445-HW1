@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Ticket</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Create Ticket</h1>
+      <p class="subtitle">Submit a simple support ticket. It will be validated, saved to Google Sheets, then summarized by AI.</p>
+
+      <form id="ticketForm">
+        <label for="name">Name *</label>
+        <input id="name" name="name" type="text" required />
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" />
+
+        <label for="message">Message *</label>
+        <textarea id="message" name="message" rows="5" required></textarea>
+
+        <button id="submitBtn" type="submit">Submit Ticket</button>
+      </form>
+
+      <section class="result-wrap">
+        <h2>Result</h2>
+        <div id="result" class="result">No submission yet.</div>
+      </section>
+    </main>
+
+    <script src="/script.js"></script>
+  </body>
+</html>
