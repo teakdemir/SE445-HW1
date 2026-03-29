@@ -6,7 +6,10 @@ Build a simple backend pipeline using this pattern:
 **Trigger → Processing Function → External API → AI Completion**
 
 This project is intentionally beginner-friendly and uses plain Node.js + Express only.
+
 <img width="1471" height="402" alt="image" src="https://github.com/user-attachments/assets/dc9abb4f-2b89-4053-86ce-bdbaf02d0339" />
+
+// there is an secret API key that I cannot share in the files.
 
 ---
 
@@ -132,4 +135,4 @@ Expected output example:
 - No deployment setup
 - Minimal file structure for easy explanation in class
 
-- // there is an secret apı key that I cannot share in the files.
+
