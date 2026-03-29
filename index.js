@@ -95,7 +95,7 @@ app.post("/process-message", async (req, res) => {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: "Sheet1!A:D",
+      range: "Sayfa1!A:D",
       valueInputOption: "RAW",
       requestBody: {
         values: [[
