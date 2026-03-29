@@ -1,26 +1,21 @@
 import express from "express";
 import dotenv from "dotenv";
-import axios from "axios";
 import OpenAI from "openai";
+import { google } from "googleapis";
 
-// Load values from .env file
 dotenv.config();
 
 const app = express();
 const port = 3000;
 
-// Let Express read incoming JSON body
 app.use(express.json());
+app.use(express.static("public"));
 
-// Create OpenAI client using environment variable
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-/**
- * Processing Function:
- * Cleans and normalizes input data for later steps.
- */
+// Processing function: trims incoming input
 function processInput(data) {
   const cleanName = (data.name || "").trim();
   const cleanEmail = (data.email || "").trim();
@@ -33,38 +28,32 @@ function processInput(data) {
   };
 }
 
-// Trigger: POST endpoint
+// Google Sheets client using local service account JSON file
+function getSheetsClient() {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: "google-service-account.json",
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"]
+  });
+
+  return google.sheets({ version: "v4", auth });
+}
+
 app.post("/process-message", async (req, res) => {
   try {
-    const input = req.body;
+    const input = req.body || {};
 
-    // Basic validation: name and message are required
-    if (!input?.name || !input?.message) {
+    // Step 1: process/clean input
+    const processedData = processInput(input);
+
+    // Step 2: validation
+    if (!processedData.cleanName || !processedData.cleanMessage) {
       return res.status(400).json({
         success: false,
         error: "'name' and 'message' are required fields."
       });
     }
 
-    // Step 1: Processing Function (clean input)
-    const processedData = processInput(input);
-
-    // Validate again after trimming
-    if (!processedData.cleanName || !processedData.cleanMessage) {
-      return res.status(400).json({
-        success: false,
-        error: "'name' and 'message' cannot be empty."
-      });
-    }
-
-    // Step 2: External API call (Agify)
-    const agifyUrl = `https://api.agify.io/?name=${encodeURIComponent(processedData.cleanName)}`;
-    const agifyResponse = await axios.get(agifyUrl);
-    const externalApiResult = {
-      predictedAge: agifyResponse.data?.age ?? null
-    };
-
-    // Step 3: AI Completion (OpenAI summary)
+    // Step 3: AI response generation with safe fallback
     let aiSummary = "";
 
     try {
@@ -86,22 +75,47 @@ app.post("/process-message", async (req, res) => {
 
       aiSummary =
         aiResponse.choices?.[0]?.message?.content?.trim() ||
-        "No summary generated.";
+        "AI summary could not be generated because API quota is unavailable.";
     } catch (aiError) {
       console.error("OpenAI error:", aiError.message);
-      aiSummary = "AI summary could not be generated because API quota is unavailable.";
+      aiSummary =
+        "AI summary could not be generated because API quota is unavailable.";
     }
 
-    // Final response
+    // Step 4: save to Google Sheets
+    const sheets = getSheetsClient();
+    const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+
+    if (!spreadsheetId) {
+      return res.status(500).json({
+        success: false,
+        error: "GOOGLE_SHEETS_ID is missing in .env"
+      });
+    }
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: "Sheet1!A:D",
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [[
+          processedData.cleanName,
+          processedData.cleanEmail,
+          processedData.cleanMessage,
+          aiSummary
+        ]]
+      }
+    });
+
     return res.json({
       success: true,
       input: {
-        name: input.name,
+        name: input.name || "",
         email: input.email || "",
-        message: input.message
+        message: input.message || ""
       },
       processedData,
-      externalApiResult,
+      savedToGoogleSheets: true,
       aiSummary
     });
   } catch (error) {
