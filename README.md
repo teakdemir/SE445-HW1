@@ -7,6 +7,8 @@ Build a beginner-friendly backend + simple UI with this workflow:
 
 This project uses plain Node.js + Express and is easy to explain in class.
 
+<img width="1423" height="882" alt="image" src="https://github.com/user-attachments/assets/434f634f-554d-43d7-9989-c2eac02270e3" />
+
 ---
 
 ## Final Workflow
